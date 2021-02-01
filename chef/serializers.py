@@ -19,4 +19,5 @@ class LoginSerializer(serializers.Serializer):
 class ChefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chef
-        fields = '__all__'
+        fields = ["username", "email", "rating"]
+        read_only_fields = ['rating']

@@ -1,12 +1,14 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from .serializers import SingUpSerializer, LoginSerializer, ChefSerializer
-from .models import Chef
-from django.db.utils import IntegrityError
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from rest_framework.generics import ListAPIView
+from django.db.utils import IntegrityError
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.request import Request
+from .models import Chef
+from .serializers import ChefSerializer, LoginSerializer, SingUpSerializer
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -46,3 +48,30 @@ def login(request, *args, **kwargs):
 class ChefListView(ListAPIView):
     queryset = Chef.objects.all()
     serializer_class = ChefSerializer
+
+
+class ChefDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Chef.objects.all()
+    serializer_class = ChefSerializer
+
+    def put(self, request: Request, *args, **kwargs):
+        return is_same_user_or_admin(request, *args, **kwargs) \
+               or self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return is_same_user_or_admin(request, *args, **kwargs) \
+               or self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request: Request, *args, **kwargs):        
+        return is_same_user_or_admin(request, *args, **kwargs) \
+               or self.destroy(request, *args, **kwargs)
+
+
+def is_same_user_or_admin(request, *args, **kwargs):
+    '''
+        Check if the user is authorized to operate the action
+    '''
+    pk = kwargs['pk']
+    user = request.user
+    if user.id != pk:
+        return Response(status=403)

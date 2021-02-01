@@ -86,19 +86,18 @@ class ChefAuthenticationTest(APITestCase):
         response = self.client.post(url, {"token": "bad_token"})
 
         self.assertEqual(response.status_code, 401)
+
+
 class ChefViewsTest(APITestCase):
     def setUp(self):
-        for i in range(1,30):
+        for i in range(1, 30):
             chef = Chef(username=f"test_chef_{i}", email=f"chef{i}@chef.com")
             chef.set_password("12334678")
             chef.save()
         self.chef = Chef.objects.first()
         self.token = f"Bearer {str(RefreshToken.for_user(self.chef).access_token)}"
-        
 
     def test_get_chefs_list(self):
-        self.client.force_login(user=self.chef)
-
         url = reverse('chef-list')
 
         response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
@@ -112,3 +111,49 @@ class ChefViewsTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 401)
+
+    def test_get_chef_details(self):
+        url = reverse('chef-detail', kwargs={'pk': 1})
+
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_unauthenticated_chefs_detail(self):
+        url = reverse('chef-detail', kwargs={'pk': 1})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_update_chef(self):
+        url = reverse('chef-detail', kwargs={'pk': 1})
+
+        response = self.client.put(url, data={
+                                   "username": "CHEF", "email": "chef@chef.com"}, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['username'], "CHEF")
+
+    def test_update_unauthenticated_chef(self):
+        url = reverse('chef-detail', kwargs={'pk': 1})
+
+        response = self.client.put(url, data={})
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_update_not_owned_chef(self):
+        url = reverse('chef-detail', kwargs={'pk': 2})
+
+        response = self.client.put(url, data={}, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_update_rating(self):
+        url = reverse('chef-detail', kwargs={'pk': 1})
+
+        response = self.client.patch(
+            url, data={'rating': 123}, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response.data['rating'], 123)

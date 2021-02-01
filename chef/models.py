@@ -9,5 +9,5 @@ class Chef(User):
         return self.username
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['id']
     
