@@ -73,5 +73,5 @@ def is_same_user_or_admin(request, *args, **kwargs):
     '''
     pk = kwargs['pk']
     user = request.user
-    if user.id != pk:
+    if not user.is_superuser and user.id != pk:
         return Response(status=403)

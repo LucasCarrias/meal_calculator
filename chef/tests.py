@@ -97,6 +97,8 @@ class ChefViewsTest(APITestCase):
         self.chef = Chef.objects.first()
         self.token = f"Bearer {str(RefreshToken.for_user(self.chef).access_token)}"
 
+
+
     def test_get_chefs_list(self):
         url = reverse('chef-list')
 
@@ -157,3 +159,17 @@ class ChefViewsTest(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response.data['rating'], 123)
+
+    def test_update_chef_as_admin(self):
+        admin = Chef(username=f"admin", email=f"admin@admin.com", is_superuser=True)
+        admin.set_password("admin")
+        admin.save()
+        admin_token = f"Bearer {str(RefreshToken.for_user(admin).access_token)}"
+
+        url = reverse('chef-detail', kwargs={'pk': 2})
+
+        response = self.client.put(url, data={
+                                   "username": "CHEF", "email": "chef@chef.com"
+                                   }, HTTP_AUTHORIZATION=admin_token)
+
+        self.assertEqual(response.status_code, 200)
