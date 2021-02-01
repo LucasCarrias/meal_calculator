@@ -1,11 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from .serializers import SingUpSerializer, LoginSerializer
+from .serializers import SingUpSerializer, LoginSerializer, ChefSerializer
 from .models import Chef
 from django.db.utils import IntegrityError
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from rest_framework.generics import ListAPIView
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -41,4 +42,7 @@ def login(request, *args, **kwargs):
 
     return Response(status=400)
 
-    
+
+class ChefListView(ListAPIView):
+    queryset = Chef.objects.all()
+    serializer_class = ChefSerializer

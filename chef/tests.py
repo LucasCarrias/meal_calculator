@@ -1,7 +1,8 @@
-from rest_framework.test import APITestCase, force_authenticate
+from rest_framework.test import APITestCase
 from .models import Chef
 from django.contrib.auth.models import User
 from django.urls import reverse
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class ChefAuthenticationTest(APITestCase):
@@ -80,4 +81,34 @@ class ChefAuthenticationTest(APITestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_invalid_token(self):
+        url = reverse('verify')
+        response = self.client.post(url, {"token": "bad_token"})
 
+        self.assertEqual(response.status_code, 401)
+class ChefViewsTest(APITestCase):
+    def setUp(self):
+        for i in range(1,30):
+            chef = Chef(username=f"test_chef_{i}", email=f"chef{i}@chef.com")
+            chef.set_password("12334678")
+            chef.save()
+        self.chef = Chef.objects.first()
+        self.token = f"Bearer {str(RefreshToken.for_user(self.chef).access_token)}"
+        
+
+    def test_get_chefs_list(self):
+        self.client.force_login(user=self.chef)
+
+        url = reverse('chef-list')
+
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+
+    def test_get_unauthenticated_chefs_list(self):
+        url = reverse('chef-list')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 401)

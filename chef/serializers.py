@@ -14,3 +14,9 @@ class SingUpSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
+
+
+class ChefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chef
+        fields = '__all__'
