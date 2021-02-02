@@ -32,6 +32,14 @@ class CategoryAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["results"]), 25)
 
+    def test_get_category_list_as_anon(self):
+        url = reverse('category-list')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+
     def test_create_category_as_admin(self):
         url = reverse('category-list')
 

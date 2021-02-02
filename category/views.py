@@ -3,10 +3,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from .models import Category
 from .serializers import CategorySerializer
+from rest_framework.permissions import AllowAny
 
 class CategoryListView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return is_admin(request) or self.create(request, *args, **kwargs)
