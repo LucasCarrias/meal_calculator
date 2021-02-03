@@ -6,7 +6,7 @@ class Ingredient(models.Model):
     cost = models.FloatField(default=0)
     currency = models.CharField(max_length=10, default='BRL')
     amount_unit = models.CharField(max_length=10, default='UN')
-    chef = models.ForeignKey(Chef, editable=False, on_delete=models.SET_NULL, null=True)
+    chef = models.ForeignKey(Chef, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name

@@ -28,4 +28,114 @@ class IngredientAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["results"]), PAGINATION_LIMIT)
 
+    def test_create_ingredient(self):
+        url = reverse('ingredient-list')
+        payload = {
+            "name": "new",
+            "cost": 10.0
+        }
+
+        response = self.client.post(url, payload, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["chef"], self.chef.id)
+
+    def test_create_ingredient_list_as_anon(self):
+        url = reverse('ingredient-list')
+        payload = {}
+
+        response = self.client.post(url, payload)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_ingredient_detail(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["chef"], self.chef.id)
+
+    def test_get_ingredient_as_anon(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["chef"], self.chef.id)
+
+    def test_put_ingredient_detail(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.put(url, data={"name":"NEW"}, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "NEW")
+
+    def test_put_ingredient_as_anon(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.put(url, data={"name":"NEW"})
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_put_ingredient_detail_of_another_chef(self):
+        chef = Chef.objects.create(username="chef2", password="chef")
+        token = f"Bearer {str(RefreshToken.for_user(chef).access_token)}"
+
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.put(url, data={"name":"NEW"}, HTTP_AUTHORIZATION=token)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_patch_ingredient_detail(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.patch(url, data={"name":"NEW"}, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "NEW")
+
+    def test_patch_ingredient_as_anon(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.patch(url, data={"name":"NEW"})
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_patch_ingredient_detail_of_another_chef(self):
+        chef = Chef.objects.create(username="chef2", password="chef")
+        token = f"Bearer {str(RefreshToken.for_user(chef).access_token)}"
+
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.patch(url, data={"name":"NEW"}, HTTP_AUTHORIZATION=token)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_ingredient_detail(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(response.status_code, 204)
+
+    def test_delete_ingredient_as_anon(self):
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_ingredient_detail_of_another_chef(self):
+        chef = Chef.objects.create(username="chef2", password="chef")
+        token = f"Bearer {str(RefreshToken.for_user(chef).access_token)}"
+
+        url = reverse('ingredient-detail', kwargs={'pk':1})
+
+        response = self.client.delete(url, HTTP_AUTHORIZATION=token)
+
+        self.assertEqual(response.status_code, 403)
+
     
