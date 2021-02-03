@@ -10,7 +10,7 @@ from datetime import timedelta
 
 PAGINATION_LIMIT = 25
 
-class IngredientAPITest(APITestCase):
+class DishAPITest(APITestCase):
     def setUp(self):
         self.chef = Chef.objects.create(username="chef", password="chef")
         self.token = f"Bearer {str(RefreshToken.for_user(self.chef).access_token)}"
@@ -21,8 +21,8 @@ class IngredientAPITest(APITestCase):
 
         ingredients = Ingredient.objects.all()
         for i in range(30):
-            dish = Dish.objects.create(chef=self.chef, name=f"ingredient {i}", portions=2, cooking_time=timedelta(minutes=i))
-            dish.ingredients.set(ingredients)
+            dish = Dish.objects.create(chef=self.chef, name=f"dish {i}", portions=2, cooking_time=timedelta(minutes=i))
+            dish.ingredients.set(ingredients[:3])
             dish.save()
 
         self.admin = User.objects.create(username="admin", password="admin", is_superuser=True)
@@ -32,7 +32,6 @@ class IngredientAPITest(APITestCase):
         url = reverse('dish-list')
 
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["results"]), PAGINATION_LIMIT)
 
@@ -47,6 +46,7 @@ class IngredientAPITest(APITestCase):
             "ingredients": [1,2,3]
         }
         response = self.client.post(url, data=payload, HTTP_AUTHORIZATION=self.token)
+        
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["name"], "new")
 
@@ -64,7 +64,7 @@ class IngredientAPITest(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["chef"], self.chef.id)
+        self.assertIn(reverse('chef-detail', kwargs={'pk': self.chef.id}), response.data["chef"])
 
     def test_get_dish_as_anon(self):
         url = reverse('dish-detail', kwargs={'pk':1})
@@ -72,7 +72,7 @@ class IngredientAPITest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["chef"], self.chef.id)
+        self.assertIn(reverse('chef-detail', kwargs={'pk': self.chef.id}), response.data["chef"])
 
     def test_put_dish_detail(self):
         url = reverse('dish-detail', kwargs={'pk':1})
