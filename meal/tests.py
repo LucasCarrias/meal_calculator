@@ -17,9 +17,21 @@ class MealAPITest(APITestCase):
         self.chef = Chef.objects.create(username="chef", password="chef")
         self.token = f"Bearer {str(RefreshToken.for_user(self.chef).access_token)}"
 
+        for i in range(1,6):
+           ingredient = Ingredient.objects.create(chef=self.chef, name=f"ingredient {i}", cost=i)
+           ingredient.save()
+
+        ingredients = Ingredient.objects.all()
+        for i in range(1,6):
+            dish = Dish.objects.create(chef=self.chef, name=f"dish {i}", portions=2, cooking_time=timedelta(minutes=i))
+            dish.ingredients.set(ingredients[:])
+            dish.save()
+
+        dishes = Dish.objects.all()
         for i in range(30):
            meal = Meal.objects.create(chef=self.chef, name=f"Meal {i}")
            meal.categories.set((category,))
+           meal.dishes.set(dishes)
            meal.save()
         
         self.admin = User.objects.create(username="admin", password="admin", is_superuser=True)
@@ -139,6 +151,17 @@ class MealAPITest(APITestCase):
         response = self.client.delete(url, HTTP_AUTHORIZATION=token)
 
         self.assertEqual(response.status_code, 403)
+
+    def test_meal_calculation(self):
+        url = reverse('meal-calculate', kwargs={"pk": 1})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Meal 0")
+        self.assertEqual(response.data["total_cost"], sum(range(1,6))*5)
+        self.assertEqual(response.data["cooking_time"], timedelta(minutes=(sum(range(1,6)))/2))
+        self.assertEqual(response.data["total_portions"], 2)
 
 
 class MealCalculateTest(APITestCase):

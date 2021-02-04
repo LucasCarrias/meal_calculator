@@ -1,9 +1,10 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from .models import Meal
-from .serializers import MealSerializer, MealWriteSerializer
+from .serializers import MealSerializer, MealWriteSerializer, MealCalculateSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 
 
 class MealListView(ListCreateAPIView):
@@ -63,6 +64,26 @@ class MealDetailView(RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
 
         return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def meal_calculate(request, *args, **kwargs):
+    meal = Meal.objects.filter(pk=kwargs.get('pk')).first()
+
+    if not meal:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    data = {
+        "name": meal.name,
+        "total_cost": meal.total_cost,
+        "total_portions": meal.total_portions,
+        "cooking_time": meal.cooking_time,
+    }
+
+    serializer = MealCalculateSerializer(data=data)
+    serializer.is_valid()
+    return Response(serializer.data)
+
 
 def has_permission(request):
     if not request.user.id:

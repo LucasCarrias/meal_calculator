@@ -30,3 +30,10 @@ class MealSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meal
         fields = "__all__"
+
+
+class MealCalculateSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    total_cost = serializers.FloatField()
+    cooking_time = serializers.FloatField()
+    total_portions = serializers.FloatField()
