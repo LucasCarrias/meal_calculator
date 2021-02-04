@@ -163,6 +163,25 @@ class MealAPITest(APITestCase):
         self.assertEqual(response.data["cooking_time"], timedelta(minutes=(sum(range(1,6)))/2))
         self.assertEqual(response.data["total_portions"], 2)
 
+    def test_meal_list_ordering_desc(self):
+        url = reverse('meal-list')
+
+        response = self.client.get(url+"?ord=DESC")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+        self.assertEqual(response.data["results"][0]["id"], 10)
+        self.assertEqual(response.data["results"][0]["name"], "Meal 9")
+
+    def test_meal_list_invalid_filter(self):
+        url = reverse('meal-list')
+
+        response = self.client.get(url+"?filter=BAD")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+        self.assertEqual(response.data["results"][0]["id"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Meal 0")
 
 class MealCalculateTest(APITestCase):
     def setUp(self):

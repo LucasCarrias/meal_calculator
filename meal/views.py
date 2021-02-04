@@ -5,12 +5,34 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-
+from django.core.exceptions import FieldError
 
 class MealListView(ListCreateAPIView):
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
     permission_classes = [AllowAny]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        filter = "name"
+        if request.GET.get("filter"):
+            try:
+                queryset = queryset.order_by(request.GET.get("filter"))
+                filter = request.GET.get("filter")
+            except FieldError:
+                pass
+            
+        if request.GET.get("ord") == "DESC":
+            queryset = queryset.order_by(f"-{filter}")
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         return has_permission(request) or self.create(request, *args, **kwargs)
