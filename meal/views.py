@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from .models import Meal
 from .serializers import MealSerializer, MealWriteSerializer, MealCalculateSerializer
 from rest_framework.permissions import AllowAny
@@ -22,7 +22,7 @@ class MealListView(ListCreateAPIView):
                 filter = request.GET.get("filter")
             except FieldError:
                 pass
-            
+
         if request.GET.get("ord") == "DESC":
             queryset = queryset.order_by(f"-{filter}")
 
@@ -85,6 +85,29 @@ class MealDetailView(RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
+        return Response(serializer.data)
+
+
+class MealSearchView(ListAPIView):
+    queryset = Meal.objects.all()
+    serializer_class = MealSerializer
+    permission_classes = [AllowAny]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        query = request.GET.get("q")
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        else:
+            queryset = queryset.none()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 @api_view(['GET'])

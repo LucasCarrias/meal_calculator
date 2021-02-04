@@ -173,13 +173,25 @@ class MealAPITest(APITestCase):
         self.assertEqual(response.data["results"][0]["id"], 10)
         self.assertEqual(response.data["results"][0]["name"], "Meal 9")
 
-    def test_meal_list_invalid_filter(self):
+    
+    def test_meal_list_with_invalid_filter(self):
         url = reverse('meal-list')
 
         response = self.client.get(url+"?filter=BAD")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["results"]), 25)
+        self.assertEqual(response.data["results"][0]["id"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Meal 0")
+
+
+    def test_meal_search(self):
+        url = reverse('meal-search')
+
+        response = self.client.get(url+"?q=0")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 3)
         self.assertEqual(response.data["results"][0]["id"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Meal 0")
 
