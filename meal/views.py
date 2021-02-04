@@ -1,6 +1,6 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from .models import Meal
-from .serializers import MealSerializer
+from .serializers import MealSerializer, MealWriteSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,7 +17,7 @@ class MealListView(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['chef'] = request.user.id
-        serializer = self.get_serializer(data=data)
+        serializer = MealWriteSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -58,7 +58,7 @@ class MealDetailView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         data = request.data.copy()
         data['chef'] = request.user.id
-        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer = MealWriteSerializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 

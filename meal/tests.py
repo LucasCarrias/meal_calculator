@@ -16,7 +16,7 @@ class MealAPITest(APITestCase):
 
         for i in range(30):
            meal = Meal.objects.create(chef=self.chef, name=f"Meal {i}")
-           meal.category.set((category,))
+           meal.categories.set((category,))
            meal.save()
         
         self.admin = User.objects.create(username="admin", password="admin", is_superuser=True)
@@ -53,7 +53,7 @@ class MealAPITest(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=self.token)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["chef"], self.chef.id)
+        self.assertIn(reverse('chef-detail', kwargs={'pk': self.chef.id}), response.data["chef"])
 
     def test_get_meal_as_anon(self):
         url = reverse('meal-detail', kwargs={'pk':1})
@@ -61,7 +61,7 @@ class MealAPITest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["chef"], self.chef.id)
+        self.assertIn(reverse('chef-detail', kwargs={'pk': self.chef.id}), response.data["chef"])
 
     def test_put_meal_detail(self):
         url = reverse('meal-detail', kwargs={'pk':1})
