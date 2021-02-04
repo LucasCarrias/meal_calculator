@@ -138,4 +138,34 @@ class IngredientAPITest(APITestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_ingredient_list_ordering_desc(self):
+        url = reverse('ingredient-list')
+
+        response = self.client.get(url+"?ord=DESC")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+        self.assertEqual(response.data["results"][0]["id"], 10)
+        self.assertEqual(response.data["results"][0]["name"], "ingredient 9")
+
     
+    def test_ingredient_list_with_invalid_filter(self):
+        url = reverse('ingredient-list')
+
+        response = self.client.get(url+"?filter=BAD")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 25)
+        self.assertEqual(response.data["results"][0]["id"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "ingredient 0")
+
+
+    def test_ingredient_search(self):
+        url = reverse('ingredient-search')
+
+        response = self.client.get(url+"?q=0")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(response.data["results"][0]["id"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "ingredient 0")
