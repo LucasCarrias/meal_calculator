@@ -156,3 +156,18 @@ class DishAPITest(APITestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class DishCalculateTest(APITestCase):
+    def setUp(self):
+        self.chef = Chef.objects.create(username="chef", password="chef")
+
+        for i in range(1,6):
+           ingredient = Ingredient.objects.create(chef=self.chef, name=f"ingredient {i}", cost=i)
+           ingredient.save()
+
+        ingredients = Ingredient.objects.all()
+        self.dish = Dish.objects.create(chef=self.chef, name=f"dish", portions=2, cooking_time=timedelta(minutes=i))
+        self.dish.ingredients.set(ingredients[:])
+        self.dish.save()
+
+    def test_calculate_dish_cost(self):
+        self.assertEqual(self.dish.total_cost, sum(range(1,6)))

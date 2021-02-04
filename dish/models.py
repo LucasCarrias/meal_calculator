@@ -11,3 +11,7 @@ class Dish(models.Model):
 
     class Meta:
         ordering = ['id']
+
+    @property
+    def total_cost(self):
+        return sum([ingredient.cost for ingredient in self.ingredients.all()])

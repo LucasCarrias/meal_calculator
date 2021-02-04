@@ -5,6 +5,9 @@ from category.models import Category
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.urls import reverse
+from ingredient.models import Ingredient
+from dish.models import Dish
+from datetime import timedelta
 
 
 class MealAPITest(APITestCase):
@@ -136,3 +139,31 @@ class MealAPITest(APITestCase):
         response = self.client.delete(url, HTTP_AUTHORIZATION=token)
 
         self.assertEqual(response.status_code, 403)
+
+
+class MealCalculateTest(APITestCase):
+    def setUp(self):
+        self.chef = Chef.objects.create(username="chef", password="chef")
+
+        for i in range(1,6):
+           ingredient = Ingredient.objects.create(chef=self.chef, name=f"ingredient {i}", cost=i)
+           ingredient.save()
+
+        ingredients = Ingredient.objects.all()
+        for i in range(1,6):
+            dish = Dish.objects.create(chef=self.chef, name=f"dish {i}", portions=2, cooking_time=timedelta(minutes=i))
+            dish.ingredients.set(ingredients[:])
+            dish.save()
+
+        dishes = Dish.objects.all()
+        self.meal = Meal.objects.create(chef=self.chef, name=f"Meal")
+        self.meal.dishes.set(dishes)
+
+    def test_calculate_meal_cost(self):
+        self.assertEqual(self.meal.total_cost, sum(range(1,6))*5)
+
+    def test_calculate_cooking_time(self):
+        self.assertEqual(self.meal.cooking_time, timedelta(minutes=(sum(range(1,6)))/2))
+
+    def test_calculate_total_portions(self):
+        self.assertEqual(self.meal.total_portions, 2)
