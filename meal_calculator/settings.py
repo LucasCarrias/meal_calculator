@@ -26,12 +26,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third party apps
+    'rest_framework',
+    'drf_yasg',
     # Local apps
     'chef',
     'category',
     'dish',
     'meal',
     'ingredient',
+    'api_docs'
 ]
 
 MIDDLEWARE = [
